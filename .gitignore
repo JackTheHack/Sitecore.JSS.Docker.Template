@@ -1,0 +1,33 @@
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+*.log
+
+scjssconfig.json
+*.deploysecret.config
+
+docker/data/cd/
+docker/data/cm/
+docker/data/solr/
+docker/data/sql/
+docker/data/xconnect/
+docker/data/xconnect-automationengine/
+docker/data/xconnect-indexworker/
+docker/data/xconnect-processingengine/
+
+src/temp/

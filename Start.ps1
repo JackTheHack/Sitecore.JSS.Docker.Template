@@ -1,0 +1,1 @@
+New-WebBinding -Name ${env:HOST_HOSTNAME} -Protocol http -IPAddress * -Port 44001;

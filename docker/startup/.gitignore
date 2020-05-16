@@ -1,0 +1,12 @@
+/cert.password.txt
+/*.pfx
+/*.cer
+/*.key
+docker/data/cd/
+docker/data/cm/
+docker/data/solr/
+docker/data/sql/
+docker/data/xconnect/
+docker/data/xconnect-automationengine/
+docker/data/xconnect-indexworker/
+docker/data/xconnect-processingengine/

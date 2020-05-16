@@ -1,0 +1,114 @@
+version: "2.4"
+
+networks:
+  default:
+    external:
+      name: nat  
+      
+services:
+  sql:
+    image: ${REGISTRY}sitecore-xp-jss-sqldev:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    volumes:
+      - .\docker\data\sql:C:\Data
+    mem_limit: 2GB
+    ports:
+      - "44010:1433"
+
+  solr:
+    image: ${REGISTRY}sitecore-xp-solr:${SITECORE_VERSION}-nanoserver-${NANOSERVER_VERSION}
+    volumes:
+      - .\docker\data\solr:C:\Data
+    mem_limit: 1GB
+    ports:
+      - "44011:8983"
+
+  xconnect:
+    image: ${REGISTRY}sitecore-xp-xconnect:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    volumes:
+      - ${LICENSE_PATH}:C:\license
+      - .\docker\data\xconnect:C:\inetpub\wwwroot\App_Data\logs
+    mem_limit: 1GB
+    links:
+      - sql
+      - solr
+
+  xconnect-automationengine:
+    image: ${REGISTRY}sitecore-xp-xconnect-automationengine:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    volumes:
+      - ${LICENSE_PATH}:C:\license
+      - .\docker\data\xconnect-automationengine:C:\AutomationEngine\App_Data\logs
+    mem_limit: 500MB
+    links:
+      - sql
+      - xconnect
+
+  xconnect-indexworker:
+    image: ${REGISTRY}sitecore-xp-xconnect-indexworker:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    volumes:
+      - ${LICENSE_PATH}:C:\license
+      - .\docker\data\xconnect-indexworker:C:\IndexWorker\App_Data\logs
+    mem_limit: 500MB
+    links:
+      - sql
+      - solr
+
+  xconnect-processingengine:
+    image: ${REGISTRY}sitecore-xp-xconnect-processingengine:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    volumes:
+      - ${LICENSE_PATH}:C:\license
+      - .\docker\data\xconnect-processingengine:C:\ProcessingEngine\App_Data\logs
+    mem_limit: 500MB
+    restart: unless-stopped
+    links:
+      - sql
+      - xconnect
+
+  cd:
+    image: ${REGISTRY}sitecore-xp-jss-cd:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    entrypoint: powershell.exe -NoLogo -NoProfile -File C:\\startup\\cd_binding.ps1
+    hostname: jss_cd.cd.docker
+    extra_hosts:
+      - "my-first-jss-app.docker:127.0.0.1"
+    volumes:
+      - ${LICENSE_PATH}:C:\license
+      - .\docker\data\cd:C:\inetpub\wwwroot\App_Data\logs
+      - .\docker\data\cd_patches:C:\inetpub\wwwroot\App_Config\Include\zzzPatches:rw   
+      - .\docker\startup:C:\startup
+      - .\build:C:\inetpub\wwwroot\dist\my-first-jss-app
+    ports:
+      - "44002:80"
+    links:
+      - sql
+      - solr
+      - xconnect
+    networks:
+      default:
+        aliases:
+          - jss_cd.cd.docker
+
+  cm:
+    image: ${REGISTRY}sitecore-xp-jss-standalone:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    entrypoint: powershell.exe -NoLogo -NoProfile -File C:\\startup\\cm_binding.ps1
+    hostname: jss_cm.cm.docker    
+    extra_hosts:
+      - "jss_cm.cm.docker:127.0.0.1"
+    volumes:
+      - ${LICENSE_PATH}:C:\license
+      - .\docker\data\cm:C:\inetpub\wwwroot\App_Data\logs
+      - .\docker\data\cm_patches:C:\inetpub\wwwroot\App_Config\Include\zzzPatches:rw
+      - .\docker\startup:C:\startup
+      - .\build:C:\inetpub\wwwroot\dist\my-first-jss-app
+    ports:
+      - "44003:80"
+      - "44004:44004"
+    links:
+      - sql
+      - solr
+      - xconnect    
+    environment:
+      HOST_HEADER: jss_cm.cm.docker
+      HOST_HOSTNAME: jss_cm.cm.docker
+    networks:
+      default:
+        aliases:
+          - jss_cm.cm.docker
